@@ -3,7 +3,7 @@ import viz, vizact, vizshape, vizproximity
 
 class Chaperone(object):
 
-    def __init__(self, path, step, radius, bemobil, tracker):
+    def __init__(self, path, step, radius, bemobil, trackers):
         """
         Fade a visible grid in and out when subjects move close to a boundary wall and back up subsequently.
 
@@ -14,13 +14,17 @@ class Chaperone(object):
             step: distance between each line building the grid
             radius: distance to the wall at which the proximity sensor should be triggered
             bemobil: if true, then path area will be fixed to [(3, 6.5), (-3, 6.5), (-3, -6.5), (3, -6.5), (3, 6.5)].
-            tracker: tracker object to make as proximity target.
+            trackers: tracker objects to make as proximity targets. Can take multiple trackers and adds them
+                to the proximity manager.
         """
 
         self.grids = []
 
         if bemobil:
             self.path = [(3, 6.5), (-3, 6.5), (-3, -6.5), (3, -6.5), (3, 6.5)]
+        else:
+            path = [(1, 1), (1, 1), (1, 1), (1, 1), (1, 1)]
+            # todo create path through parameters provided to the Chaperone constructor (__init__).
 
         self.grid1 = self.add_grid([13, 3], [0, 0, 0], [3, 1.5, 0], step)
         self.grids.append(self.grid1)
@@ -43,8 +47,9 @@ class Chaperone(object):
         self.path_manager = vizproximity.Manager()
         self.path_manager.addSensor(self.path_sensor)
 
-        if tracker:
-            self.path_manager.addTarget(tracker)
+        if trackers:
+            for tracker in trackers:
+                self.path_manager.addTarget(tracker)
         else:
             self.path_manager.addTarget(viz.MainView)
 
@@ -61,6 +66,8 @@ class Chaperone(object):
 
         Args:
             dimensions: dimensions (length/height) of one grid/wall for the chaperone
+            euler: orientation in euler angles of grid.
+            position: position of the grid in x, y, z coordinates
             stepsize: distance between the lines in the grid in meters
 
         Returns: A grid wall.
@@ -94,8 +101,8 @@ class Chaperone(object):
         Fades in a grid when a proximity target enters the chaperone path area.
 
         Args:
+            e: triggered sensor event.
             grids: 4 side walls (visible as grids) at the bounding position of the room space.
-
 
         """
 
@@ -110,6 +117,7 @@ class Chaperone(object):
         Fades out a grid when a proximity target leaves the chaperone path area.
 
         Args:
+            e: triggered sensor event.
             grids: 4 side walls (visible as grids) at the bounding position of the room space.
 
         """
